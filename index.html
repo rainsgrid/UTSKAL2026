@@ -1,0 +1,1104 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulasi Kualitas Air Laut</title>
+    <style>
+        body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: #f8f9fa; margin: 0; padding: 20px; display: flex; justify-content: center; align-items: center; min-height: 100vh; color: #333; }
+        .container { background-color: #ffffff; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); width: 100%; max-width: 850px; padding: 40px; box-sizing: border-box; }
+        .header-title { text-align: center; color: #0d6efd; font-size: 28px; font-weight: bold; margin-bottom: 10px; }
+        .header-subtitle { text-align: center; color: #6c757d; font-size: 14px; margin-bottom: 30px; }
+        .grid-menu { display: grid; grid-template-columns: 1fr; gap: 15px; margin-bottom: 15px; }
+        .btn-outline { background-color: transparent; border: 1px solid #0d6efd; color: #0d6efd; padding: 15px; border-radius: 6px; cursor: pointer; font-size: 14px; text-align: left; font-weight: 500; transition: 0.2s; height: 100%; display: flex; align-items: center; }
+        .btn-outline:hover { background-color: #f0f7ff; }
+        .btn-solid { background-color: #0d6efd; color: white; border: none; padding: 15px; border-radius: 6px; cursor: pointer; font-size: 15px; font-weight: bold; width: 100%; text-align: center; transition: 0.2s; }
+        .btn-solid:hover { background-color: #0b5ed7; }
+        .btn-prev { background-color: #6c757d; color: white; border: none; padding: 12px 24px; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        .btn-red { background-color: #dc3545 !important; width: auto !important; padding: 12px 24px; }
+        .quiz-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 10px; }
+        .category-title { color: #0d6efd; font-size: 18px; font-weight: bold; margin: 0; max-width: 70%; }
+        .question-counter { color: #6c757d; font-size: 14px; font-weight: 500; }
+        .progress-bar-container { width: 100%; background-color: #e9ecef; height: 6px; border-radius: 3px; margin-bottom: 25px; overflow: hidden; }
+        .progress-bar { height: 100%; background-color: #0d6efd; width: 0%; transition: width 0.3s ease; }
+        .question-box { background-color: #f0f7ff; border: 1px solid #cce3fd; border-radius: 8px; padding: 25px; font-size: 17px; margin-bottom: 20px; text-align: left; font-weight: 500; line-height: 1.6;}
+        .options-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+        .option-item { display: flex; align-items: flex-start; padding: 12px 15px; border: 1px solid #ced4da; border-radius: 6px; cursor: pointer; transition: 0.2s; line-height: 1.4; }
+        .option-item:hover { background-color: #f8f9fa; }
+        .option-item input { margin-right: 15px; margin-top: 3px; transform: scale(1.2); flex-shrink: 0; pointer-events: none; }
+        .option-item.selected { border-color: #0d6efd; background-color: #f0f7ff; font-weight: 600; }
+        .essay-area { width: 100%; height: 150px; padding: 15px; border-radius: 8px; border: 1px solid #ced4da; font-family: inherit; font-size: 16px; box-sizing: border-box; margin-bottom: 20px; resize: vertical; }
+        .quiz-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 20px; gap: 10px; }
+        .review-card { border: 1px solid #cce3fd; border-radius: 8px; padding: 20px; margin-bottom: 15px; background-color: #f8fbfd; text-align: left;}
+        .wrong-pg { border-color: #f8d7da; background-color: #fff5f5; }
+        .ans-user { padding: 10px; border-radius: 4px; font-size: 14px; margin-top: 5px; background: white; border: 1px solid #eee; }
+        .ans-ref { background-color: #e8f4fd; padding: 10px; border-radius: 4px; font-size: 14px; color: #084298; margin-top: 5px; }
+        .review-badge { background-color: #e9ecef; color: #495057; font-size: 11px; padding: 3px 8px; border-radius: 4px; float: right; }
+    </style>
+</head>
+<body>
+
+<div class="container" id="home-screen">
+    <div class="header-title">SIMULASI KUALITAS AIR LAUT</div>
+    <div class="header-subtitle">Materi: Pendahuluan Kualitas Air Laut</div>
+    <div class="grid-menu" id="menu-container"></div>
+    <button class="btn-solid" style="width: 100%; margin-top: 10px;" onclick="startQuiz('Semua Topik')">Mulai Simulasi Kuis</button>
+</div>
+
+<div class="container" id="quiz-screen" style="display: none;">
+    <div class="quiz-header">
+        <h2 class="category-title" id="current-category-text">Kategori</h2>
+        <div class="question-counter" id="question-counter">Soal 1 / 15</div>
+    </div>
+    <div class="progress-bar-container"><div class="progress-bar" id="progress-bar"></div></div>
+    <div class="question-box" id="question-text">...</div>
+    <div id="answer-container"></div>
+    <div class="quiz-footer">
+        <button class="btn-prev" id="btn-prev" onclick="prevQuestion()">Sebelumnya</button>
+        <button class="btn-solid btn-red" id="btn-finish-anytime" onclick="showResults()">Akhiri & Lihat Hasil</button>
+        <button class="btn-solid" id="btn-next" style="width: auto; padding: 12px 24px;" onclick="nextQuestion()">Selanjutnya</button>
+    </div>
+</div>
+
+<div class="container" id="result-screen" style="display: none;">
+    <div class="header-title" style="font-size: 24px;">Hasil Simulasi Kualitas Air Laut</div>
+    <div class="score-card" style="border: 1px solid #e9ecef; border-radius: 8px; padding: 20px; margin-bottom: 30px;">
+        <div style="display:flex; justify-content: space-between; margin-bottom: 10px;"><span>Topik:</span><span id="score-category-name" style="font-weight:bold;">...</span></div>
+        <div style="display:flex; justify-content: space-between; font-weight: bold; color: #198754; font-size: 22px;"><span>Skor Benar (PG & BS):</span><span id="score-text-total">0/0</span></div>
+        <p style="font-size: 12px; color: #666; margin-top: 10px;">*Jawaban Essay diperiksa mandiri menggunakan referensi kunci jawaban yang tersedia di bawah.</p>
+    </div>
+    <div id="review-container"></div>
+    <button class="btn-solid" onclick="location.reload()" style="width: 100%; margin-top: 20px;">Kembali ke Menu Utama</button>
+</div>
+
+<script>
+const databaseSoal = [
+    // --- KATEGORI: Pendahuluan Kualitas Air Laut ---
+    { 
+        kategori: "Pendahuluan Kualitas Air Laut", 
+        tipe: "pg", 
+        pertanyaan: "Berdasarkan materi pengantar, berapa persentase luas permukaan bumi yang ditutupi oleh lautan serta perannya bagi atmosfer?", 
+        pilihan: [
+            "50% permukaan bumi dan menghasilkan sepertiga oksigen", 
+            "70% permukaan bumi dan menyediakan setengah dari oksigen yang kita hirup", 
+            "80% permukaan bumi dan menghasilkan seluruh oksigen global", 
+            "60% permukaan bumi dan menyerap seluruh karbon dioksida"
+        ], 
+        kunci_jawaban: "70% permukaan bumi dan menyediakan setengah dari oksigen yang kita hirup" 
+    },
+    { 
+        kategori: "Pendahuluan Kualitas Air Laut", 
+        tipe: "pg", 
+        pertanyaan: "Dalam kaitannya dengan kehidupan dan lingkungan, air memiliki dua dimensi utama, yaitu...", 
+        pilihan: [
+            "Suhu dan salinitas", 
+            "Kuantitas dan kualitas (quantity and quality)", 
+            "pH dan alkalinitas", 
+            "Densitas dan viskositas"
+        ], 
+        kunci_jawaban: "Kuantitas dan kualitas (quantity and quality)" 
+    },
+    { 
+        kategori: "Pendahuluan Kualitas Air Laut", 
+        tipe: "pg", 
+        pertanyaan: "Secara umum, kualitas air (*water quality*) didefinisikan berdasarkan karakteristik dari sifat-sifat berikut, kecuali...", 
+        pilihan: [
+            "Fisik", 
+            "Kimia", 
+            "Biologi", 
+            "Tektonik"
+        ], 
+        kunci_jawaban: "Tektonik" 
+    },
+    { 
+        kategori: "Pendahuluan Kualitas Air Laut", 
+        tipe: "pg", 
+        pertanyaan: "Menurut World Health Organisation (WHO), perairan dikategorikan tercemar apabila...", 
+        pilihan: [
+            "Komposisi atau kondisinya diubah secara langsung maupun tidak langsung oleh aktivitas manusia sehingga kurang layak untuk fungsinya", 
+            "Suhu air meningkat secara alami akibat pemanasan global", 
+            "Terjadi pengendapan sedimen secara periodik di muara sungai", 
+            "Salinitas air mengalami fluktuasi akibat pasang surut air laut"
+        ], 
+        kunci_jawaban: "Komposisi atau kondisinya diubah secara langsung maupun tidak langsung oleh aktivitas manusia sehingga kurang layak untuk fungsinya" 
+    },
+    { 
+        kategori: "Pendahuluan Kualitas Air Laut", 
+        tipe: "pg", 
+        pertanyaan: "Berdasarkan PP No. 20 Tahun 1990 dan Effendi (2003), apakah definisi dari kualitas air?", 
+        pilihan: [
+            "Sifat air dan kandungan makhluk hidup, zat, energi atau komponen lain di dalam air", 
+            "Batas atau kadar unsur pencemar yang dapat ditenggang di dalam limbah", 
+            "Kemampuan air dalam menerima beban pencemar limbah tanpa penurunan mutu", 
+            "Jumlah total volume air yang mengalir dalam suatu badan air"
+        ], 
+        kunci_jawaban: "Sifat air dan kandungan makhluk hidup, zat, energi atau komponen lain di dalam air" 
+    },
+    { 
+        kategori: "Pendahuluan Kualitas Air Laut", 
+        tipe: "pg", 
+        pertanyaan: "Batas atau kadar makhluk hidup, zat, energi, atau komponen lain yang ada atau harus ada dan/atau unsur pencemar yang dapat ditenggang dalam sumber air tertentu sesuai dengan peruntukannya disebut...", 
+        pilihan: [
+            "Baku mutu air", 
+            "Baku mutu limbah cair", 
+            "Beban pencemar", 
+            "Daya tampung beban pencemar"
+        ], 
+        kunci_jawaban: "Baku mutu air" 
+    },
+    { 
+        kategori: "Pendahuluan Kualitas Air Laut", 
+        tipe: "pg", 
+        pertanyaan: "Batas atau kadar dan jumlah unsur pencemar yang dapat ditenggang keberadaannya di dalam limbah cair dari suatu jenis kegiatan tertentu yang dibuang disebut...", 
+        pilihan: [
+            "Baku mutu air", 
+            "Baku mutu limbah cair", 
+            "Beban pencemar", 
+            "Daya tampung beban pencemar"
+        ], 
+        kunci_jawaban: "Baku mutu limbah cair" 
+    },
+    { 
+        kategori: "Pendahuluan Kualitas Air Laut", 
+        tipe: "pg", 
+        pertanyaan: "Jumlah suatu parameter pencemaran yang terkandung dalam sejumlah air atau limbah disebut dengan istilah...", 
+        pilihan: [
+            "Baku mutu", 
+            "Beban pencemar", 
+            "Daya tampung", 
+            "Parameter in-situ"
+        ], 
+        kunci_jawaban: "Beban pencemar" 
+    },
+    { 
+        kategori: "Pendahuluan Kualitas Air Laut", 
+        tipe: "pg", 
+        pertanyaan: "Kemampuan air dalam sumber air untuk menerima beban pencemar limbah tanpa mengakibatkan penurunan kualitas air di bawah baku mutu disebut...", 
+        pilihan: [
+            "Beban pencemar", 
+            "Daya tampung beban pencemar", 
+            "Parameter kualitas air", 
+            "Kapasitas pengolahan limbah"
+        ], 
+        kunci_jawaban: "Daya tampung beban pencemar" 
+    },
+    { 
+        kategori: "Pendahuluan Kualitas Air Laut", 
+        tipe: "pg", 
+        pertanyaan: "Dalam modul praktikum survei lapangan kualitas air, parameter apa saja yang diukur secara langsung (in-situ) di perairan?", 
+        pilihan: [
+            "Suhu, salinitas, turbiditas, kecerahan, dan arus", 
+            "Kadar nitrat, nitrit, amoniak, dan fosfat terlarut", 
+            "Logam berat Pb, Cd, Cu, dan Hg", 
+            "Konsentrasi klorofil-a dan biomassa fitoplankton"
+        ], 
+        kunci_jawaban: "Suhu, salinitas, turbiditas, kecerahan, dan arus" 
+    },
+    { 
+        kategori: "Pendahuluan Kualitas Air Laut", 
+        tipe: "bs", 
+        pertanyaan: "Lingkungan perairan yang sehat dicirikan oleh kualitas air yang baik sehingga mampu mendukung komunitas organisme serta melindungi kesehatan secara umum.", 
+        kunci_jawaban: "Benar" 
+    },
+    { 
+        kategori: "Pendahuluan Kualitas Air Laut", 
+        tipe: "bs", 
+        pertanyaan: "Analisis laboratorium terhadap sampel air dalam modul praktikum kualitas air laut umumnya mencakup pengujian parameter unsur hara seperti nitrat, nitrit, amoniak, dan fosfat.", 
+        kunci_jawaban: "Benar" 
+    },
+    { 
+        kategori: "Pendahuluan Kualitas Air Laut", 
+        tipe: "bs", 
+        pertanyaan: "Menurut World Health Organisation (WHO), perairan alami yang mengalami perubahan komposisi murni akibat proses geologis internal bumi tanpa campur tangan aktivitas manusia tetap dikategorikan sebagai perairan tercemar.", 
+        kunci_jawaban: "Salah" 
+    },
+    { 
+        kategori: "Pendahuluan Kualitas Air Laut", 
+        tipe: "essay", 
+        pertanyaan: "Jelaskan definisi pencemaran air berdasarkan PP No. 20 Tahun 1990 dan Effendi (2003) serta uraikan mengapa pemeliharaan kualitas air sangat penting bagi lingkungan dan kehidupan!", 
+        kunci_jawaban: "Pencemaran air adalah masuknya atau dimasukkannya makhluk hidup, zat, energi, atau komponen lain ke dalam air oleh kegiatan manusia sehingga kualitas air menurun sampai ke tingkat tertentu yang menyebabkan tidak lagi berfungsi sesuai dengan peruntukannya. Pemeliharaan kualitas air sangat penting karena air merupakan sumber utama lingkungan, ekonomi, dan sosial; kualitas air yang baik melindungi kesehatan, menjaga habitat ekosistem, serta mendukung sektor pertanian, perikanan, industri, rekreasi, dan pariwisata." 
+    },
+    { 
+        kategori: "Pendahuluan Kualitas Air Laut", 
+        tipe: "essay", 
+        pertanyaan: "Uraikan perbedaan antara baku mutu air (*water quality standard*) dan baku mutu limbah cair (*wastewater standard*) beserta pengertian dari daya tampung beban pencemar (*assimilation capacity*)!", 
+        kunci_jawaban: "Baku mutu air adalah batas atau kadar makhluk hidup, zat, energi, atau komponen lain yang dapat ditenggang dalam sumber air tertentu sesuai peruntukannya, sedangkan baku mutu limbah cair adalah batas kadar dan jumlah unsur pencemar yang dapat ditenggang dalam limbah cair dari suatu kegiatan tertentu yang dibuang. Adapun daya tampung beban pencemar adalah kemampuan badan air untuk menerima beban pencemar tanpa menyebabkan penurunan mutu air di bawah standar baku mutu yang telah ditetapkan." 
+    },
+
+// --- KATEGORI: Karakteristik Air (Week 2) ---
+    { 
+        kategori: "Karakteristik Air", 
+        tipe: "pg", 
+        pertanyaan: "Berapakah nilai pH rata-rata untuk air laut (seawater) berdasarkan perbandingan sifat fisik dan kimia pada materi Karakteristik Air?", 
+        pilihan: ["7.0 (netral)", "6.5 (sedikit asam)", "8.1 (sedikit basa)", "9.5 (basa kuat)"], 
+        kunci_jawaban: "8.1 (sedikit basa)" 
+    },
+    { 
+        kategori: "Karakteristik Air", 
+        tipe: "pg", 
+        pertanyaan: "Berapakah titik beku air laut dengan salinitas 35‰ dibandingkan dengan air murni?", 
+        pilihan: ["0°C", "-1.9°C", "-4.0°C", "1.9°C"], 
+        kunci_jawaban: "-1.9°C" 
+    },
+    { 
+        kategori: "Karakteristik Air", 
+        tipe: "pg", 
+        pertanyaan: "Mengapa molekul air (H₂O) sering dijuluki sebagai pelarut universal ('universal solvent')?", 
+        pilihan: [
+            "Karena air hanya dapat melarutkan senyawa organik berantai panjang",
+            "Karena air memiliki kemampuan melarutkan lebih banyak zat dibandingkan cairan lainnya",
+            "Karena air memiliki struktur kristal heksagonal yang kaku",
+            "Karena air tidak dapat berikatan dengan ion bermuatan"
+        ], 
+        kunci_jawaban: "Karena air memiliki kemampuan melarutkan lebih banyak zat dibandingkan cairan lainnya" 
+    },
+    { 
+        kategori: "Karakteristik Air", 
+        tipe: "pg", 
+        pertanyaan: "Ion terlarut apakah yang memiliki konsentrasi paling tinggi dan paling melimpah di dalam air laut (salinitas 35‰)?", 
+        pilihan: ["Natrium (Na⁺)", "Klorida (Cl⁻)", "Sulfat (SO₄²⁻)", "Kalsium (Ca²⁺)"], 
+        kunci_jawaban: "Klorida (Cl⁻)" 
+    },
+    { 
+        kategori: "Karakteristik Air", 
+        tipe: "pg", 
+        pertanyaan: "Lapisan di dalam kolom air laut di mana terjadi perubahan densitas secara cepat terhadap kedalaman disebut sebagai...", 
+        pilihan: ["Thermocline", "Halocline", "Pycnocline", "Mixed layer"], 
+        kunci_jawaban: "Pycnocline" 
+    },
+    { 
+        kategori: "Karakteristik Air", 
+        tipe: "pg", 
+        pertanyaan: "Proses apakah yang dapat menyebabkan peningkatan salinitas air di permukaan laut?", 
+        pilihan: [
+            "Curah hujan yang tinggi (precipitation)",
+            "Pencairan gunung es (icebergs melting)",
+            "Evaporasi (penguapan) di iklim panas",
+            "Aliran limpasan sungai (runoff)"
+        ], 
+        kunci_jawaban: "Evaporasi (penguapan) di iklim panas" 
+    },
+    { 
+        kategori: "Karakteristik Air", 
+        tipe: "pg", 
+        pertanyaan: "Sistem apakah yang berfungsi secara alami untuk menjaga kestabilan pH air laut agar tetap berada di kisaran 8.1?", 
+        pilihan: [
+            "Carbonate buffering system",
+            "Nitrogen fixation cycle",
+            "Photosynthesis-respiration balance",
+            "Pycnocline stratification system"
+        ], 
+        kunci_jawaban: "Carbonate buffering system" 
+    },
+    { 
+        kategori: "Karakteristik Air", 
+        tipe: "pg", 
+        pertanyaan: "Apakah definisi yang paling tepat mengenai temperatur suatu zat berdasarkan tinjauan fisika molekuler?", 
+        pilihan: [
+            "Ukuran total kandungan panas internal di dalam objek",
+            "Ukuran langsung dari rata-rata energi kinetik atom dan molekul penyusun zat",
+            "Jumlah kalor yang dibutuhkan untuk mengubah wujud zat dari cair ke gas",
+            "Kecepatan rambat perpindahan energi dari suhu tinggi ke rendah"
+        ], 
+        kunci_jawaban: "Ukuran langsung dari rata-rata energi kinetik atom dan molekul penyusun zat" 
+    },
+    { 
+        kategori: "Karakteristik Air", 
+        tipe: "pg", 
+        pertanyaan: "Mengapa kapasitas panas (heat capacity) air yang sangat tinggi memiliki signifikansi ekologis yang sangat besar bagi bumi?", 
+        pilihan: [
+            "Membuat es membeku lebih cepat di daerah kutub",
+            "Membantu arus laut dalam memoderasi iklim global dan mencegah fluktuasi suhu ekstrem",
+            "Menyebabkan air laut mendidih pada suhu di bawah 100°C",
+            "Mempercepat laju penguapan air di daerah ekuator"
+        ], 
+        kunci_jawaban: "Membantu arus laut dalam memoderasi iklim global dan mencegah fluktuasi suhu ekstrem" 
+    },
+    { 
+        kategori: "Karakteristik Air", 
+        tipe: "pg", 
+        pertanyaan: "Berdasarkan siklus unsur terlarut di lautan, ion-ion ditambahkan ke dalam air laut melalui mekanisme berikut, kecuali...", 
+        pilihan: [
+            "River discharge (pelarutan dari daratan oleh sungai)",
+            "Erupsi vulkanik (volcanic eruptions)",
+            "Aktivitas hidrotermal di mid-ocean ridge",
+            "Pembentukan es laut (sea ice forming)"
+        ], 
+        kunci_jawaban: "Pembentukan es laut (sea ice forming)" 
+    },
+    { 
+        kategori: "Karakteristik Air", 
+        tipe: "bs", 
+        pertanyaan: "Es dapat mengapung di atas permukaan air cair karena struktur kristal es memiliki kerapatan (density) yang lebih rendah dibandingkan air cair akibat pengembangan ikatan hidrogen.", 
+        kunci_jawaban: "Benar" 
+    },
+    { 
+        kategori: "Karakteristik Air", 
+        tipe: "bs", 
+        pertanyaan: "Waktu tinggal (residence time) suatu unsur terlarut di dalam samudra bernilai sama persis untuk semua jenis ion tanpa dipengaruhi oleh seberapa reaktif unsur tersebut.", 
+        kunci_jawaban: "Salah" 
+    },
+    { 
+        kategori: "Karakteristik Air", 
+        tipe: "bs", 
+        pertanyaan: "Hukum Pertama Termodinamika menyatakan bahwa perubahan energi internal suatu sistem setara dengan panas yang ditambahkan ke dalam sistem dikurangi kerja yang dilakukan oleh sistem (ΔU = Q - W).", 
+        kunci_jawaban: "Benar" 
+    },
+    { 
+        kategori: "Karakteristik Air", 
+        tipe: "essay", 
+        pertanyaan: "Jelaskan bagaimana struktur polar molekul air dan pembentukan ikatan hidrogen memengaruhi sifat pelarut (solvent property) serta tingginya titik didih dan titik lebur air!", 
+        kunci_jawaban: "Molekul air bersifat polar karena distribusi muatan tidak simetris (oksigen bermuatan parsial negatif dan hidrogen bermuatan parsial positif) dengan sudut ikatan sekitar 105°. Polaritas ini memungkinkan air membentuk selubung hidrasi (hydration sheath) di sekitar ion seperti Na⁺ dan Cl⁻, menjadikannya pelarut universal. Selain itu, ikatan hidrogen antarmolekul air memerlukan energi termal yang besar untuk diputus, sehingga titik lebur dan titik didih air jauh lebih tinggi dibandingkan senyawa hidrida sejenis." 
+    },
+    { 
+        kategori: "Karakteristik Air", 
+        tipe: "essay", 
+        pertanyaan: "Uraikan proses penambahan dan pengurangan ion terlarut di dalam samudra serta jelaskan definisi dari waktu tinggal (residence time) suatu unsur di lautan!", 
+        kunci_jawaban: "Ion-ion ditambahkan ke dalam air laut melalui pelapukan dan limpasan sungai (river discharge), erupsi vulkanik, serta aktivitas hidrotermal di punggungan tengah samudra (mid-ocean ridge). Sebaliknya, ion-ion dihilangkan melalui proses adsorpsi dan presipitasi, semburan buih laut (sea spray), proses biologis, serta aktivitas hidrotermal. Adapun waktu tinggal (residence time) adalah rata-rata waktu yang dihabiskan oleh suatu zat terlarut di dalam samudra, yang dihitung dari jumlah total zat tersebut di laut dibagi dengan laju masuk atau keluarnya." 
+    },
+
+// --- Kategori: Jenis-Jenis Polutan dan Sumbernya (Week 3) ---
+    { 
+        kategori: "Jenis-Jenis Polutan dan Sumbernya", 
+        tipe: "pg", 
+        pertanyaan: "Apakah perbedaan utama antara sumber pencemar titik (*point source*) dan sumber pencemar non-titik (*non-point source*) di perairan?", 
+        pilihan: [
+            "Point source berasal dari limpasan air hujan, sedangkan non-point source dari cerobong pabrik", 
+            "Point source merujuk pada sumber pencemar tunggal yang dapat diidentifikasi (seperti pipa efluen), sedangkan non-point source merupakan sumber menyebar seperti hujan asam atau badai debu", 
+            "Point source hanya mencakup pencemaran minyak, sedangkan non-point source mencakup sampah plastik", 
+            "Point source bersifat kronis jangka panjang, sedangkan non-point source bersifat diskrit jangka pendek"
+        ], 
+        kunci_jawaban: "Point source merujuk pada sumber pencemar tunggal yang dapat diidentifikasi (seperti pipa efluen), sedangkan non-point source merupakan sumber menyebar seperti hujan asam atau badai debu" 
+    },
+    { 
+        kategori: "Jenis-Jenis Polutan dan Sumbernya", 
+        tipe: "pg", 
+        pertanyaan: "Manakah contoh yang paling tepat untuk menggambarkan pencemaran tipe kronis (*chronic pollution*) di lingkungan perairan?", 
+        pilihan: [
+            "Tumpahan minyak akibat kecelakaan kapal tanker secara mendadak", 
+            "Masukan nutrien dan pembuangan efluen secara terus-menerus dalam jangka panjang", 
+            "Ledakan senjata nuklir bawah air", 
+            "Badai debu musiman di wilayah pesisir"
+        ], 
+        kunci_jawaban: "Masukan nutrien dan pembuangan efluen secara terus-menerus dalam jangka panjang" 
+    },
+    { 
+        kategori: "Jenis-Jenis Polutan dan Sumbernya", 
+        tipe: "pg", 
+        pertanyaan: "Kelompok polutan apakah yang mencakup nitrat ($NO_3^-$) dan fosfat ($PO_4^{3-}$) yang memicu pertumbuhan alga berlebih?", 
+        pilihan: [
+            "Oxygen-demanding wastes", 
+            "Infectious agents (pathogens)", 
+            "Plant nutrients", 
+            "Inorganic chemicals"
+        ], 
+        kunci_jawaban: "Plant nutrients" 
+    },
+    { 
+        kategori: "Jenis-Jenis Polutan dan Sumbernya", 
+        tipe: "pg", 
+        pertanyaan: "Ketika minyak tumpah ke laut dan mengalami emulsifikasi dengan komponen air, terbentuklah massa kental berwarna menyerupai cokelat yang dikenal sebagai...", 
+        pilihan: [
+            "Tarballs", 
+            "Oil slick", 
+            "Chocolate mousse", 
+            "Neuston layer"
+        ], 
+        kunci_jawaban: "Chocolate mousse" 
+    },
+    { 
+        kategori: "Jenis-Jenis Polutan dan Sumbernya", 
+        tipe: "pg", 
+        pertanyaan: "Apakah dampak utama yang ditimbulkan dari proses eutrofikasi terhadap konsentrasi gas terlarut di dalam ekosistem perairan?", 
+        pilihan: [
+            "Peningkatan drastis kadar oksigen terlarut hingga jenuh", 
+            "Penurunan kadar oksigen terlarut (hipoksia/anoksia) yang memicu kematian massal organisme", 
+            "Peningkatan keasaman air hingga pH di bawah 2.0", 
+            "Peningkatan salinitas secara ekstrem akibat evaporasi nutrien"
+        ], 
+        kunci_jawaban: "Penurunan kadar oksigen terlarut (hipoksia/anoksia) yang memicu kematian massal organisme" 
+    },
+    { 
+        kategori: "Jenis-Jenis Polutan dan Sumbernya", 
+        tipe: "pg", 
+        pertanyaan: "Kasus pencemaran merkuri historis di Teluk Minamata, Jepang, disebabkan oleh pembuangan senyawa apa ke dalam teluk oleh pabrik plastik?", 
+        pilihan: [
+            "Timbal klorida ($PbCl_2$)", 
+            "Kadmium sulfat ($CdSO_4$)", 
+            "Merkuri klorida / mercuric chloride ($HgCl_2$)", 
+            "Arsenik trioksida ($As_2O_3$)"
+        ], 
+        kunci_jawaban: "Merkuri klorida / mercuric chloride ($HgCl_2$)" 
+    },
+    { 
+        kategori: "Jenis-Jenis Polutan dan Sumbernya", 
+        tipe: "pg", 
+        pertanyaan: "Apa karakteristik utama dari hidrokarbon berhalogenasi (*halogenated hydrocarbons* seperti DDT dan PCBs) yang membedakannya dari hidrokarbon minyak bumi biasa?", 
+        pilihan: [
+            "Mudah terdegradasi secara cepat oleh bakteri pengurai di air laut", 
+            "Tidak terdegradasi oleh oksidasi kimia maupun bakteri (sangat persisten) serta larut dalam lemak", 
+            "Memiliki berat molekul yang sangat rendah dan mudah menguap ke atmosfer dalam hitungan menit", 
+            "Hanya bersumber dari letusan gunung berapi bawah laut"
+        ], 
+        kunci_jawaban: "Tidak terdegradasi oleh oksidasi kimia maupun bakteri (sangat persisten) serta larut dalam lemak" 
+    },
+    { 
+        kategori: "Jenis-Jenis Polutan dan Sumbernya", 
+        tipe: "pg", 
+        pertanyaan: "Manakah yang *bukan* merupakan dampak langsung dari pencemaran termal (*thermal pollution*) terhadap perairan?", 
+        pilihan: [
+            "Terjadinya *thermal shock* pada organisme", 
+            "Penurunan konsentrasi oksigen terlarut", 
+            "Peningkatan laju metabolisme ikan", 
+            "Peningkatan permanen keanekaragaman spesies fitoplankton secara merata tanpa batas"
+        ], 
+        kunci_jawaban: "Peningkatan permanen keanekaragaman spesies fitoplankton secara merata tanpa batas" 
+    },
+    { 
+        kategori: "Jenis-Jenis Polutan dan Sumbernya", 
+        tipe: "pg", 
+        pertanyaan: "Berdasarkan sampel yang diambil di North Pacific Gyre oleh Algalita Marine Research Foundation pada tahun 1999, ditemukan fakta bahwa massa plastik dibandingkan massa zooplankton adalah...", 
+        pilihan: [
+            "Massa zooplankton enam kali lebih besar daripada massa plastik", 
+            "Massa plastik melebihi massa zooplankton dengan faktor enam (1:6)", 
+            "Massa keduanya seimbang (rasio 1:1)", 
+            "Plastik sama sekali tidak ditemukan di tengah gyre samudra"
+        ], 
+        kunci_jawaban: "Massa plastik melebihi massa zooplankton dengan faktor enam (1:6)" 
+    },
+    { 
+        kategori: "Jenis-Jenis Polutan dan Sumbernya", 
+        tipe: "pg", 
+        pertanyaan: "Dalam studi kasus pencemaran radioaktif, isotop radioaktif apakah yang ditemukan terakumulasi hingga 10 kali lipat lebih tinggi pada alga *Porphyra* di dekat pembangkit tenaga nuklir dibandingkan perairan sekitarnya?", 
+        pilihan: [
+            "Uranium-238", 
+            "Plutonium-239", 
+            "Caesium-137", 
+            "Strontium-90"
+        ], 
+        kunci_jawaban: "Caesium-137" 
+    },
+    { 
+        kategori: "Jenis-Jenis Polutan dan Sumbernya", 
+        tipe: "bs", 
+        pertanyaan: "Pencemaran diskrit (*discrete pollution*) bersifat jangka pendek seperti tumpahan minyak, di mana dampaknya akan berkurang seiring berjalannya waktu.", 
+        kunci_jawaban: "Benar" 
+    },
+    { 
+        kategori: "Jenis-Jenis Polutan dan Sumbernya", 
+        tipe: "bs", 
+        pertanyaan: "Senyawa hidrokarbon berhalogenasi berat seperti DDT dan PCBs memiliki tingkat kelarutan dalam air yang sangat tinggi sehingga mudah terbuang ke luar jaringan tubuh organisme.", 
+        kunci_jawaban: "Salah" 
+    },
+    { 
+        kategori: "Jenis-Jenis Polutan dan Sumbernya", 
+        tipe: "bs", 
+        pertanyaan: "Sebagian besar (hingga 80%) dari total sampah dan pencemaran plastik di lautan berasal dari sumber daratan (*land-based sources*).", 
+        kunci_jawaban: "Benar" 
+    },
+    { 
+        kategori: "Jenis-Jenis Polutan dan Sumbernya", 
+        tipe: "essay", 
+        pertanyaan: "Jelaskan definisi pencemaran laut menurut GESAMP serta sebutkan lima bentuk dampak umum (*general impacts*) yang ditimbulkannya pada lingkungan laut!", 
+        kunci_jawaban: "Definisi GESAMP: masuknya manusia secara langsung maupun tidak langsung ke lingkungan laut berupa zat atau energi yang mengakibatkan efek merusak seperti bahaya bagi kesehatan manusia, gangguan aktivitas laut, penurunan kualitas air, pengurangan fasilitas, hilangnya keindahan estetika, dampak pada habitat sensitif, dan kerugian sumber daya hayati." 
+    },
+    { 
+        kategori: "Jenis-Jenis Polutan dan Sumbernya", 
+        tipe: "essay", 
+        pertanyaan: "Uraikan perbedaan sumber alami dan antropogenik (manmade) dari logam berat di perairan laut serta berikan contoh dampak spesifik dari unsur Arsenik (As) dan Kadmium (Cd) terhadap organisme laut!", 
+        kunci_jawaban: "Sumber alami logam berat meliputi pelapukan batuan bermijih, masukan atmosfer (debu angin), aktivitas vulkanik, kebakaran hutan, dan masukan sungai; sedangkan sumber antropogenik meliputi pembuangan limbah industri, limbah domestik (sewage), dan resuspensi sedimen akibat pengerukan. Dampak spesifik: Arsenik (As) sangat sensitif bagi fitoplankton yang mengakumulasikannya dari kolom air, sementara Kadmium (Cd) dalam bentuk divalent bersifat sangat toksik dan cenderung terbioakumulasi (*bioaccumulate*)." 
+    },
+
+// --- Kategori: Indikator & Parameter Pencemaran di Perairan (Week 4) ---
+    { 
+        kategori: "Indikator & Parameter Pencemaran", 
+        tipe: "pg", 
+        pertanyaan: "Alat ukur oseanografi yang mengombinasikan sensor thermistor berpresisi tinggi untuk mengukur suhu, konduktivitas, dan tekanan (kedalaman) secara simultan adalah...", 
+        pilihan: [
+            "Secchi Disk", 
+            "CTD (Conductivity, Temperature, Depth)", 
+            "ARGO Float", 
+            "Transmissometer"
+        ], 
+        kunci_jawaban: "CTD (Conductivity, Temperature, Depth)" 
+    },
+    { 
+        kategori: "Indikator & Parameter Pencemaran", 
+        tipe: "pg", 
+        pertanyaan: "Instrumen berupa pelampung oseanografi bebas yang dapat menyelam hingga kedalaman 2.000 meter untuk mengukur profil suhu dan salinitas di laut lepas dinamakan...", 
+        pilihan: [
+            "Reversing Thermometer", 
+            "ARGO Float", 
+            "Turbidimeter", 
+            "Nephelometer"
+        ], 
+        kunci_jawaban: "ARGO Float" 
+    },
+    { 
+        kategori: "Indikator & Parameter Pencemaran", 
+        tipe: "pg", 
+        pertanyaan: "Alat sederhana berbentuk piringan bundar yang dicelupkan ke dalam air untuk mengukur tingkat kecerahan perairan berdasarkan kedalaman hilangnya visibilitas disebut...", 
+        pilihan: [
+            "Secchi Disk (Cakram Secchi)", 
+            "Spectrophotometer", 
+            "Clark-type Electrode", 
+            "Optode Sensor"
+        ], 
+        kunci_jawaban: "Secchi Disk (Cakram Secchi)" 
+    },
+    { 
+        kategori: "Indikator & Parameter Pencemaran", 
+        tipe: "pg", 
+        pertanyaan: "Apakah definisi yang paling tepat mengenai TSS (Total Suspended Solids) dalam parameter fisik perairan?", 
+        pilihan: [
+            "Jumlah zat padat total yang terlarut dalam bentuk ion dan mineral di dalam air", 
+            "Jumlah partikel padatan (organik dan anorganik) tersuspensi yang tertahan pada saringan", 
+            "Intensitas hambatan cahaya yang disebabkan oleh partikel lumpur halus", 
+            "Derajat kejenuhan garam terlarut per kilogram air laut"
+        ], 
+        kunci_jawaban: "Jumlah partikel padatan (organik dan anorganik) tersuspensi yang tertahan pada saringan" 
+    },
+    { 
+        kategori: "Indikator & Parameter Pencemaran", 
+        tipe: "pg", 
+        pertanyaan: "Prinsip kerja alat refraktometer dalam pengukuran salinitas air laut didasarkan pada...", 
+        pilihan: [
+            "Pengukuran daya hantar listrik ion terlarut", 
+            "Pengukuran indeks bias cahaya dalam air laut yang meningkat seiring tingginya kandungan garam", 
+            "Penguapan air murni secara gravimetri", 
+            "Titrasi kandungan ion klorida dengan larutan perak nitrat"
+        ], 
+        kunci_jawaban: "Pengukuran indeks bias cahaya dalam air laut yang meningkat seiring tingginya kandungan garam" 
+    },
+    { 
+        kategori: "Indikator & Parameter Pencemaran", 
+        tipe: "pg", 
+        pertanyaan: "Pada metode Winkler (standar klasik titrasi untuk mengukur Oksigen Terlarut / DO), reagen ion logam apakah yang pertama kali bereaksi dengan oksigen untuk membentuk endapan?", 
+        pilihan: [
+            "Ion mangan ($Mn^{2+}$)", 
+            "Ion klorida ($Cl^-$)", 
+            "Ion natrium ($Na^+$)", 
+            "Ion kalsium ($Ca^{2+}$)"
+        ], 
+        kunci_jawaban: "Ion mangan ($Mn^{2+}$)" 
+    },
+    { 
+        kategori: "Indikator & Parameter Pencemaran", 
+        tipe: "pg", 
+        pertanyaan: "Apa perbedaan mendasar antara parameter BOD (Biological Oxygen Demand) dan COD (Chemical Oxygen Demand)?", 
+        pilihan: [
+            "BOD mengukur oksigen terlarut, sedangkan COD mengukur karbon dioksida", 
+            "BOD menggunakan mikroorganisme secara biologis untuk menguraikan bahan organik, sedangkan COD menggunakan oksidator kimia kuat", 
+            "BOD diukur menggunakan spektrofotometer, sedangkan COD diukur menggunakan Secchi Disk", 
+            "BOD hanya berlaku untuk air tawar, sedangkan COD khusus untuk air laut dalam"
+        ], 
+        kunci_jawaban: "BOD menggunakan mikroorganisme secara biologis untuk menguraikan bahan organik, sedangkan COD menggunakan oksidator kimia kuat" 
+    },
+    { 
+        kategori: "Indikator & Parameter Pencemaran", 
+        tipe: "pg", 
+        pertanyaan: "Senyawa kimia apakah yang bertindak sebagai agen oksidator kuat dalam suasana asam pada pengujian parameter COD di laboratorium?", 
+        pilihan: [
+            "Kalium dikromat ($K_2Cr_2O_7$)", 
+            "Asam klorida pekat ($HCl$)", 
+            "Natrium hidroksida ($NaOH$)", 
+            "Sulfur dioksida ($SO_2$)"
+        ], 
+        kunci_jawaban: "Kalium dikromat ($K_2Cr_2O_7$)" 
+    },
+    { 
+        kategori: "Indikator & Parameter Pencemaran", 
+        tipe: "pg", 
+        pertanyaan: "Instrumen kromatografi canggih apa saja yang tercantum dalam materi untuk menganalisis kandungan pestisida dan senyawa organik di perairan?", 
+        pilihan: [
+            "Gas Chromatography (GC) dan High Performance Liquid Chromatography (HPLC)", 
+            "Reversing Thermometer dan Salinometer", 
+            "Turbidimeter dan Secchi Disk", 
+            "Clark-type Electrode dan Optode"
+        ], 
+        kunci_jawaban: "Gas Chromatography (GC) dan High Performance Liquid Chromatography (HPLC)" 
+    },
+    { 
+        kategori: "Indikator & Parameter Pencemaran", 
+        tipe: "pg", 
+        pertanyaan: "Jenis sensor optik pada CTD yang berfungsi khusus untuk mengukur transmisi atau penerusan cahaya melalui air laut dinamakan...", 
+        pilihan: [
+            "Transmissometer", 
+            "Thermistor", 
+            "pH Electrode", 
+            "Conductivity Cell"
+        ], 
+        kunci_jawaban: "Transmissometer" 
+    },
+    { 
+        kategori: "Indikator & Parameter Pencemaran", 
+        tipe: "bs", 
+        pertanyaan: "ARGO Float adalah pelampung oseanografi mandiri yang dapat menyelam hingga kedalaman 2.000 meter untuk merekam profil vertikal suhu dan salinitas.", 
+        kunci_jawaban: "Benar" 
+    },
+    { 
+        kategori: "Indikator & Parameter Pencemaran", 
+        tipe: "bs", 
+        pertanyaan: "Total Dissolved Solids (TDS) didefinisikan sebagai padatan tidak terlarut yang ukurannya cukup besar sehingga tertahan di atas kertas saring saat proses filtrasi.", 
+        kunci_jawaban: "Salah" 
+    },
+    { 
+        kategori: "Indikator & Parameter Pencemaran", 
+        tipe: "bs", 
+        pertanyaan: "Pengujian parameter BOD melibatkan aktivitas mikroorganisme (bakteri) untuk menguraikan bahan organik dengan memanfaatkan oksigen terlarut di dalam air.", 
+        kunci_jawaban: "Benar" 
+    },
+    { 
+        kategori: "Indikator & Parameter Pencemaran", 
+        tipe: "essay", 
+        pertanyaan: "Jelaskan perbedaan prinsip kerja serta karakteristik operasional dari tiga alat pengukur suhu laut yang dipelajari, yaitu Reversing Thermometer, CTD, dan ARGO Float!", 
+        kunci_jawaban: "Reversing Thermometer bekerja secara mekanis dengan cara membalikkan posisi termometer pada kedalaman tertentu untuk memutuskan kolom merkuri sehingga suhu insitu terkunci. CTD (Conductivity, Temperature, Depth) menggunakan sensor thermistor elektronik berpresisi tinggi yang diintegrasikan dengan sel konduktivitas dan sensor tekanan untuk merekam data secara kontinu dan real-time. Sementara itu, ARGO Float adalah pelampung bebas yang menyelam secara mandiri hingga kedalaman 2.000 meter dan mengukur profil suhu serta salinitas secara vertikal saat bergerak naik ke permukaan." 
+    },
+    { 
+        kategori: "Indikator & Parameter Pencemaran", 
+        tipe: "essay", 
+        pertanyaan: "Uraikan perbedaan mendasar antara parameter BOD (Biological Oxygen Demand) dan COD (Chemical Oxygen Demand) dilihat dari agen pengurai/oksidator yang terlibat serta proses kimia atau biologis yang terjadi di dalam air!", 
+        kunci_jawaban: "BOD (Biological Oxygen Demand) mengukur jumlah oksigen terlarut yang dikonsumsi oleh mikroorganisme (secara biologis) untuk mendegradasi bahan organik di dalam air dalam rentang waktu tertentu (biasanya 5 hari). Sebaliknya, COD (Chemical Oxygen Demand) mengukur jumlah total oksigen yang setara dengan kebutuhan oksidator kimia kuat (seperti kalium dikromat, K2Cr2O7 dalam suasana asam) untuk mengoksidasi seluruh bahan organik, baik yang dapat diurai secara biologis maupun bahan organik yang sulit diurai." 
+    },
+
+// --- Kategori: Pemantauan Kualitas Air & Teknik Sampling (Week 6) ---
+    { 
+        kategori: "Pemantauan Kualitas Air & Teknik Sampling", 
+        tipe: "pg", 
+        pertanyaan: "Menurut Mason (1993) dalam materi Pemantauan Kualitas Air, tujuan pemantauan yang dilakukan untuk mendeteksi dan mengukur pengaruh yang ditimbulkan oleh suatu pencemar terhadap kualitas lingkungan disebut sebagai...", 
+        pilihan: [
+            "Establishing Water-Quality Criteria", 
+            "Environmental Surveillance", 
+            "Appraisal of Resource", 
+            "Baseline Assessment"
+        ], 
+        kunci_jawaban: "Environmental Surveillance" 
+    },
+    { 
+        kategori: "Pemantauan Kualitas Air & Teknik Sampling", 
+        tipe: "pg", 
+        pertanyaan: "Jenis sampel air yang diambil secara langsung dari badan air yang sedang dipantau dan hanya menggambarkan karakteristik air pada saat pengambilan sampel tersebut dinamakan...", 
+        pilihan: [
+            "Sampel komposit (composite sample)", 
+            "Sampel gabungan tempat (integrated sample)", 
+            "Sampel sesaat (grab sample)", 
+            "Sampel integrasi waktu"
+        ], 
+        kunci_jawaban: "Sampel sesaat (grab sample)" 
+    },
+    { 
+        kategori: "Pemantauan Kualitas Air & Teknik Sampling", 
+        tipe: "pg", 
+        pertanyaan: "Berdasarkan SNI 06-2421-1991 untuk titik sampling di sungai, berapa jumlah titik sampling yang diperlukan jika sungai memiliki debit aliran kurang dari 5 m³/s?", 
+        pilihan: [
+            "1 titik", 
+            "2 titik", 
+            "4 titik", 
+            "6 titik"
+        ], 
+        kunci_jawaban: "1 titik" 
+    },
+    { 
+        kategori: "Pemantauan Kualitas Air & Teknik Sampling", 
+        tipe: "pg", 
+        pertanyaan: "Untuk danau dengan kedalaman antara 10 hingga 30 meter, berapa jumlah titik sampling yang direkomendasikan berdasarkan SNI 06-2421-1991?", 
+        pilihan: [
+            "2 titik", 
+            "3 titik", 
+            "4 titik", 
+            "6 titik"
+        ], 
+        kunci_jawaban: "3 titik" 
+    },
+    { 
+        kategori: "Pemantauan Kualitas Air & Teknik Sampling", 
+        tipe: "pg", 
+        pertanyaan: "Di manakah lokasi pengambilan sampel air pada sumur gali menurut standar pemantauan air tanah?", 
+        pilihan: [
+            "Pada dasar sumur paling bawah", 
+            "Pada kedalaman 20 cm dari permukaan air", 
+            "Tepat di tengah kolom air sumur", 
+            "Melalui dinding sumur bagian samping"
+        ], 
+        kunci_jawaban: "Pada kedalaman 20 cm dari permukaan air" 
+    },
+    { 
+        kategori: "Pemantauan Kualitas Air & Teknik Sampling", 
+        tipe: "pg", 
+        pertanyaan: "Manakah alat pengambil sampel air di kedalaman (*depth sampler*) yang umum digunakan di bidang oseanografi dan limnologi yang tercantum dalam materi?", 
+        pilihan: [
+            "Secchi Disk dan Turbidimeter", 
+            "Niskin sampler, Van Dorn sampler, dan Kemmerer sampler", 
+            "Refraktometer dan Salinometer", 
+            "Clark-type Electrode dan Optode"
+        ], 
+        kunci_jawaban: "Niskin sampler, Van Dorn sampler, dan Kemmerer sampler" 
+    },
+    { 
+        kategori: "Pemantauan Kualitas Air & Teknik Sampling", 
+        tipe: "pg", 
+        pertanyaan: "Dalam pengawetan sampel air di laboratorium, metode atau pereaksi apakah yang umum digunakan untuk mengawetkan parameter logam total atau logam terlarut?", 
+        pilihan: [
+            "Penambahan NaOH hingga pH > 10", 
+            "Penambahan HNO₃ hingga pH < 2", 
+            "Penambahan H₂SO₄ hingga pH < 2", 
+            "Pendinginan pada suhu -20°C tanpa bahan kimia"
+        ], 
+        kunci_jawaban: "Penambahan HNO₃ hingga pH < 2" 
+    },
+    { 
+        kategori: "Pemantauan Kualitas Air & Teknik Sampling", 
+        tipe: "pg", 
+        pertanyaan: "Sumber sinar atau lampu yang digunakan pada instrumen Atomic Absorption Spectrophotometer (AAS) untuk pengujian unsur logam disesuaikan dengan unsur yang akan diuji, yang dikenal sebagai...", 
+        pilihan: [
+            "Hollow Cathode Lamp (HCL)", 
+            "Transmissometer Source", 
+            "Xenon Flash Lamp", 
+            "Infrared Diode Laser"
+        ], 
+        kunci_jawaban: "Hollow Cathode Lamp (HCL)" 
+    },
+    { 
+        kategori: "Pemantauan Kualitas Air & Teknik Sampling", 
+        tipe: "pg", 
+        pertanyaan: "Apakah perbedaan fundamental utama antara instrumen ICP-OES dan ICP-MS dalam mendeteksi analit?", 
+        pilihan: [
+            "ICP-OES mendeteksi emisi foton optik berdasarkan panjang gelombang (λ), sedangkan ICP-MS mendeteksi massa ion (m/z) menggunakan filter kuadrupol", 
+            "ICP-OES menggunakan sistem vakum tinggi <10⁻⁵ Torr, sedangkan ICP-MS menggunakan suhu kamar", 
+            "ICP-OES khusus untuk gas mulia, sedangkan ICP-MS khusus untuk senyawa organik padat", 
+            "ICP-OES berbasis titrasi kimia, sedangkan ICP-MS berbasis gravimetri"
+        ], 
+        kunci_jawaban: "ICP-OES mendeteksi emisi foton optik berdasarkan panjang gelombang (λ), sedangkan ICP-MS mendeteksi massa ion (m/z) menggunakan filter kuadrupol" 
+    },
+    { 
+        kategori: "Pemantauan Kualitas Air & Teknik Sampling", 
+        tipe: "pg", 
+        pertanyaan: "Parameter apa saja yang termasuk sebagai parameter lapangan (*field parameters*) yang diukur langsung saat sampling air?", 
+        pilihan: [
+            "Temperatur, pH, konduktivitas, salinitas, oksigen terlarut, sisa klor, dan kecerahan", 
+            "Kadar logam berat Pb, Cd, Hg secara terperinci", 
+            "Jumlah bakteri Coliform dan E. coli total", 
+            "Konsentrasi pestisida organoklorin"
+        ], 
+        kunci_jawaban: "Temperatur, pH, konduktivitas, salinitas, oksigen terlarut, sisa klor, dan kecerahan" 
+    },
+    { 
+        kategori: "Pemantauan Kualitas Air & Teknik Sampling", 
+        tipe: "bs", 
+        pertanyaan: "Sampel komposit (*composite sample*) adalah sampel air yang diperoleh dari pencampuran beberapa sampel sesaat yang diambil dari lokasi yang sama pada waktu yang berbeda atau secara proporsional.", 
+        kunci_jawaban: "Benar" 
+    },
+    { 
+        kategori: "Pemantauan Kualitas Air & Teknik Sampling", 
+        tipe: "bs", 
+        pertanyaan: "Parameter kualitas air yang bersifat sangat labil dan mudah berubah dengan cepat serta tidak dapat diawetkan dalam waktu lama antara lain adalah temperatur, oksigen terlarut, dan CO₂ agresif.", 
+        kunci_jawaban: "Benar" 
+    },
+    { 
+        kategori: "Pemantauan Kualitas Air & Teknik Sampling", 
+        tipe: "bs", 
+        pertanyaan: "Wadah atau botol sampel yang terbuat dari bahan plastik atau gelas untuk pengujian kimia air diperbolehkan menyerap (*adsorp*) senyawa kimia dari sampel secara bebas tanpa batasan persyaratan.", 
+        kunci_jawaban: "Salah" 
+    },
+    { 
+        kategori: "Pemantauan Kualitas Air & Teknik Sampling", 
+        tipe: "essay", 
+        pertanyaan: "Jelaskan tiga tujuan utama pemantauan kualitas air menurut Mason (1993) yang meliputi Environmental Surveillance, Establishing Water-Quality Criteria, dan Appraisal of Resource!", 
+        kunci_jawaban: "Tiga tujuan utama pemantauan kualitas air meliputi: (1) Environmental Surveillance, yaitu untuk mendeteksi dan mengukur pengaruh pencemar terhadap kualitas lingkungan serta mengetahui perbaikan kualitas setelah pencemar dihilangkan; (2) Establishing Water-Quality Criteria, yaitu untuk mengetahui hubungan sebab-akibat antara perubahan variabel ekologi perairan dengan parameter fisika-kimia guna menetapkan baku mutu air; serta (3) Appraisal of Resource, yaitu untuk memperoleh gambaran umum mengenai kualitas air pada suatu wilayah." 
+    },
+    { 
+        kategori: "Pemantauan Kualitas Air & Teknik Sampling", 
+        tipe: "essay", 
+        pertanyaan: "Uraikan perbedaan antara teknik pengambilan sampel sesaat (grab sample) dan sampel komposit (composite sample), serta sebutkan persyaratan penting bagi wadah/botol sampel air yang digunakan!", 
+        kunci_jawaban: "Grab sample (sampel sesaat) adalah contoh air yang diambil langsung dari badan air dan hanya mencerminkan kondisi pada saat pengambilan tersebut. Sebaliknya, composite sample (sampel komposit) adalah gabungan beberapa contoh air dari beberapa waktu pengamatan atau tempat yang dicampur secara proporsional. Persyaratan wadah/botol sampel meliputi: terbuat dari bahan yang tidak memengaruhi kualitas air (seperti plastik atau gelas khusus), dapat ditutup dengan rapat, mudah dicuci/dibersihkan, serta tidak mengadsorpsi senyawa kimia dari sampel." 
+    },
+
+// --- Kategori: Indeks Kualitas Air & Kualitas Air Laut (Week 7) ---
+    { 
+        kategori: "Indeks Kualitas Air & Kualitas Air Laut", 
+        tipe: "pg", 
+        pertanyaan: "Apakah keuntungan utama dari penggunaan Indeks Kualitas Air (Water Quality Index / WQI) dalam penilaian lingkungan perairan?", 
+        pilihan: [
+            "Mengurangi kompleksitas data dengan menggabungkan banyak parameter kualitas air menjadi satu nilai tunggal", 
+            "Menghilangkan seluruh data historis pemantauan lapangan secara permanen", 
+            "Mengubah parameter biologi secara langsung menjadi parameter fisika murni", 
+            "Menghindari perlunya pengambilan sampel air di laboratorium"
+        ], 
+        kunci_jawaban: "Mengurangi kompleksitas data dengan menggabungkan banyak parameter kualitas air menjadi satu nilai tunggal" 
+    },
+    { 
+        kategori: "Indikator & Parameter Pencemaran", 
+        tipe: "pg", 
+        pertanyaan: "Sebutkan tiga tahapan utama dalam menyusun atau mengompilasi sebuah Indeks Kualitas Air (WQ Index)!", 
+        pilihan: [
+            "Pemilihan parameter, penentuan skor kualitas (sub-indeks), dan penggabungan sub-indeks", 
+            "Pengambilan sampel sesaat, titrasi Winkler, dan inkubasi BOD selama 5 hari", 
+            "Filtrasi sedimen, pemanasan suhu tinggi, dan pengukuran berat kering", 
+            "Kalibrasi sensor pH, pengukuran salinitas, dan perhitungan debit sungai"
+        ], 
+        kunci_jawaban: "Pemilihan parameter, penentuan skor kualitas (sub-indeks), dan penggabungan sub-indeks" 
+    },
+    { 
+        kategori: "Indeks Kualitas Air & Kualitas Air Laut", 
+        tipe: "pg", 
+        pertanyaan: "Dalam materi metode Indeks Kualitas Air, rumus $WQI = \frac{\sum [C_i / PI_i]}{n}$ dikenal sebagai metode perhitungan yang merujuk pada...", 
+        pilihan: [
+            "Metode Dow Jones", 
+            "Metode Sumitomo dan Nemerow", 
+            "Metode Oregon Standards", 
+            "Metode General Quality Assessment (GQA)"
+        ], 
+        kunci_jawaban: "Metode Dow Jones" 
+    },
+    { 
+        kategori: "Indeks Kualitas Air & Kualitas Air Laut", 
+        tipe: "pg", 
+        pertanyaan: "Metode Indeks Pencemaran (IP) yang dikembangkan oleh Sumitomo dan Nemerow (1970) memperhitungkan nilai indeks rata-rata ($(C/L)_R$) dan nilai indeks maksimum ($(C/L)_M$). Bagaimana bentuk rumus perhitungan Indeks Pencemaran (IP) tersebut?", 
+        pilihan: [
+            "$IP = \sqrt{\frac{(C/L)_M^2 + (C/L)_R^2}{2}}$", 
+            "$IP = \frac{(C/L)_M + (C/L)_R}{2}$", 
+            "$IP = (C/L)_M \times (C/L)_R$", 
+            "$IP = \frac{1}{n} \sum (C_i / L_i)$"
+        ], 
+        kunci_jawaban: "$IP = \sqrt{\frac{(C/L)_M^2 + (C/L)_R^2}{2}}$" 
+    },
+    { 
+        kategori: "Indeks Kualitas Air & Kualitas Air Laut", 
+        tipe: "pg", 
+        pertanyaan: "Berdasarkan klasifikasi mutu air menggunakan Metode Indeks Pencemaran (IP), rentang nilai IP antara $5 < IP \le 10$ menunjukkan status mutu air...", 
+        pilihan: [
+            "Memenuhi baku mutu (standard)", 
+            "Tercemar ringan", 
+            "Tercemar sedang", 
+            "Tercemar berat"
+        ], 
+        kunci_jawaban: "Tercemar sedang" 
+    },
+    { 
+        kategori: "Indeks Kualitas Air & Kualitas Air Laut", 
+        tipe: "pg", 
+        pertanyaan: "Dalam sistem perhitungan WQI, apa yang dimaksud dengan Q-value (sub-indeks)?", 
+        pilihan: [
+            "Indikasi kualitas air relatif terhadap satu parameter tertentu pada skala 0 hingga 100", 
+            "Faktor pembobotan yang menunjukkan tingkat kepentingan relatif suatu parameter", 
+            "Volume total air sampel yang diperlukan untuk analisis logam berat", 
+            "Batas ambang maksimum konsentrasi polutan dalam air minum"
+        ], 
+        kunci_jawaban: "Indikasi kualitas air relatif terhadap satu parameter tertentu pada skala 0 hingga 100" 
+    },
+    { 
+        kategori: "Indeks Kualitas Air & Kualitas Air Laut", 
+        tipe: "pg", 
+        pertanyaan: "Apakah fungsi dari *Weighting Factor* (faktor pembobotan) dalam perhitungan Indeks Kualitas Air (WQI)?", 
+        pilihan: [
+            "Menentukan tingkat kepentingan relatif dari masing-masing parameter terhadap keseluruhan kualitas air", 
+            "Mengonversi satuan suhu dari Celsius ke Fahrenheit", 
+            "Menghitung debit aliran air di muara sungai secara otomatis", 
+            "Menentukan kedalaman titik pengambilan sampel air di danau"
+        ], 
+        kunci_jawaban: "Menentukan tingkat kepentingan relatif dari masing-masing parameter terhadap keseluruhan kualitas air" 
+    },
+    { 
+        kategori: "Indeks Kualitas Air & Kualitas Air Laut", 
+        tipe: "pg", 
+        pertanyaan: "Khusus untuk parameter Oksigen Terlarut (DO) dalam perhitungan Indeks Pencemaran (IP), rasio $C/L$ dihitung menggunakan formula khusus penyesuaian. Rumus tersebut melibatkan variabel konsentrasi DO jenuh/teoritik ($C_m$), DO hasil pengukuran ($C_i$), dan baku mutu DO ($L_i$), yaitu...", 
+        pilihan: [
+            "$\frac{C_m - C_i}{C_m L_i}$", 
+            "$\frac{C_i}{L_i}$", 
+            "$1 + 5 \log(C_i / L_i)$", 
+            "$\sqrt{C_i \times L_i}$"
+        ], 
+        kunci_jawaban: "$\frac{C_m - C_i}{C_m L_i}$" 
+    },
+    { 
+        kategori: "Indeks Kualitas Air & Kualitas Air Laut", 
+        tipe: "pg", 
+        pertanyaan: "Sistem pemantauan otomatis kualitas air berbasis web yang didemonstrasikan untuk pemetaan WQI di sepanjang Sungai Gangga dinamakan...", 
+        pilihan: [
+            "GRAMS (Ganga River Automatic Monitoring System)", 
+            "ARGO Float Monitoring Network", 
+            "CTD Real-Time Profiler System", 
+            "WQI Victoria Cloud System"
+        ], 
+        kunci_jawaban: "GRAMS (Ganga River Automatic Monitoring System)" 
+    },
+    { 
+        kategori: "Indeks Kualitas Air & Kualitas Air Laut", 
+        tipe: "pg", 
+        pertanyaan: "Berdasarkan studi kasus kondisi sosial dan pencemaran di sekitar DAS Cisanggarung, salah satu faktor utama penyebab pencemaran dari aspek perilaku masyarakat adalah...", 
+        pilihan: [
+            "Kebiasaan membuang sampah rumah tangga dan limbah cair langsung ke badan sungai atau saluran", 
+            "Penggunaan teknologi pemurnian air osmosis balik secara massal", 
+            "Penerapan sistem pertanian organik tanpa pupuk kimia", 
+            "Pembangunan bendungan buatan untuk konservasi air"
+        ], 
+        kunci_jawaban: "Kebiasaan membuang sampah rumah tangga dan limbah cair langsung ke badan sungai atau saluran" 
+    },
+    { 
+        kategori: "Indeks Kualitas Air & Kualitas Air Laut", 
+        tipe: "bs", 
+        pertanyaan: "Indeks Kualitas Air (WQI) sangat bermanfaat untuk merangkum data parameter yang kompleks menjadi satu nilai tunggal, namun memiliki kelemahan berupa hilangnya sebagian informasi rinci (*loss of information*).", 
+        kunci_jawaban: "Benar" 
+    },
+    { 
+        kategori: "Indeks Kualitas Air & Kualitas Air Laut", 
+        tipe: "bs", 
+        pertanyaan: "Berdasarkan klasifikasi mutu air dengan Metode Indeks Pencemaran (IP), rentang nilai $0 \le IP \le 1$ menunjukkan bahwa perairan tersebut sudah tercemar berat dan melampaui baku mutu.", 
+        kunci_jawaban: "Salah" 
+    },
+    { 
+        kategori: "Indikator & Parameter Pencemaran", 
+        tipe: "bs", 
+        pertanyaan: "Dalam perhitungan WQI, apabila terdapat parameter yang datanya tidak tersedia (*missing data*), penyesuaian dapat dilakukan dengan membagi jumlah total indeks parameter dengan jumlah *weighting factor* yang memiliki data saja.", 
+        kunci_jawaban: "Benar" 
+    },
+    { 
+        kategori: "Indeks Kualitas Air & Kualitas Air Laut", 
+        tipe: "essay", 
+        pertanyaan: "Jelaskan apa yang dimaksud dengan Indeks Kualitas Air (WQI), serta sebutkan tiga langkah utama yang diperlukan dalam menyusun atau mengompilasi sebuah WQI!", 
+        kunci_jawaban: "Indeks Kualitas Air (WQI) adalah bentuk penyajian sederhana dari kombinasi sejumlah parameter kualitas air (baik fisika, kimia, maupun biologi) yang berfungsi sebagai ukuran keseluruhan kualitas air dan disajikan dalam bentuk angka, kelas, simbol, atau warna. Tiga langkah utama dalam menyusun WQI meliputi: (1) Pemilihan parameter yang relevan dengan tujuan pemantauan; (2) Penentuan skor kualitas atau sub-indeks (Q-value) untuk setiap parameter; dan (3) Penggabungan sub-indeks melalui formula agregasi (seperti rata-rata berbobot atau rata-rata geometris) untuk mendapatkan nilai indeks tunggal." 
+    },
+    { 
+        kategori: "Indeks Kualitas Air & Kualitas Air Laut", 
+        tipe: "essay", 
+        pertanyaan: "Uraikan perbedaan mendasar antara Metode Indeks Kualitas Air (WQI) dengan Metode Indeks Pencemaran (IP) berdasarkan Sumitomo dan Nemerow (1970) dalam hal penentuan status mutu air di perairan!", 
+        kunci_jawaban: "Metode Indeks Kualitas Air (WQI) umumnya menggabungkan nilai sub-indeks (Q-value) yang dikalikan dengan faktor pembobotan (*weighting factor*) untuk menghasilkan nilai tunggal dalam rentang skala tertentu (misalnya 0-100 dengan kategori dari *Very Bad* hingga *Excellent*). Sebaliknya, Metode Indeks Pencemaran (IP) menggunakan rasio konsentrasi pengukuran terhadap baku mutu ($C_i / L_i$) dengan memasukkan unsur nilai rata-rata ($(C/L)_R$) dan nilai maksimum ($(C/L)_M$) ke dalam rumus akar kuadrat rata-rata kuadrat untuk mengklasifikasikan tingkat pencemaran menjadi empat status mutu, yaitu memenuhi baku mutu, tercemar ringan, tercemar sedang, dan tercemar berat." 
+    }
+];
+
+let soalAktif = [], indeksSoal = 0, jawabanUser = [];
+
+function initMenu() {
+    const container = document.getElementById('menu-container');
+    container.innerHTML = ''; 
+    const kategoriUnik = [...new Set(databaseSoal.map(s => s.kategori))];
+    kategoriUnik.forEach(k => {
+        const btn = document.createElement('button');
+        btn.className = 'btn-outline';
+        btn.innerText = k;
+        btn.onclick = () => startQuiz(k);
+        container.appendChild(btn);
+    });
+}
+
+function startQuiz(k) {
+    soalAktif = k === 'Semua Topik' ? [...databaseSoal].sort(() => Math.random() - 0.5) : databaseSoal.filter(s => s.kategori === k);
+    indeksSoal = 0; 
+    jawabanUser = new Array(soalAktif.length).fill(""); 
+    document.getElementById('home-screen').style.display = 'none';
+    document.getElementById('result-screen').style.display = 'none'; 
+    document.getElementById('quiz-screen').style.display = 'block';
+    document.getElementById('current-category-text').innerText = k;
+    renderSoal();
+}
+
+function renderSoal() {
+    const s = soalAktif[indeksSoal];
+    document.getElementById('question-counter').innerText = `Soal ${indeksSoal + 1} / ${soalAktif.length}`;
+    document.getElementById('progress-bar').style.width = `${((indeksSoal + 1) / soalAktif.length) * 100}%`;
+    document.getElementById('question-text').innerText = s.pertanyaan;
+    
+    const container = document.getElementById('answer-container');
+    container.innerHTML = '';
+
+    if (s.tipe === 'pg') {
+        const div = document.createElement('div');
+        div.className = 'options-list';
+        s.pilihan.forEach(o => {
+            const lbl = document.createElement('label'); 
+            lbl.className = 'option-item' + (jawabanUser[indeksSoal] === o ? ' selected' : '');
+            lbl.innerHTML = `<input type="radio" name="opt" ${jawabanUser[indeksSoal] === o ? 'checked' : ''}> ${o}`;
+            lbl.onclick = () => {
+                jawabanUser[indeksSoal] = o;
+                renderSoal(); 
+            };
+            div.appendChild(lbl);
+        });
+        container.appendChild(div);
+    } else if (s.tipe === 'bs') {
+        const div = document.createElement('div');
+        div.className = 'options-list';
+        const pilihanBS = ["Benar", "Salah"];
+        pilihanBS.forEach(o => {
+            const lbl = document.createElement('label'); 
+            lbl.className = 'option-item' + (jawabanUser[indeksSoal] === o ? ' selected' : '');
+            lbl.innerHTML = `<input type="radio" name="opt" ${jawabanUser[indeksSoal] === o ? 'checked' : ''}> ${o}`;
+            lbl.onclick = () => {
+                jawabanUser[indeksSoal] = o;
+                renderSoal(); 
+            };
+            div.appendChild(lbl);
+        });
+        container.appendChild(div);
+    } else {
+        const txt = document.createElement('textarea');
+        txt.className = 'essay-area';
+        txt.placeholder = 'Tuliskan jawaban Anda di sini...';
+        txt.value = jawabanUser[indeksSoal];
+        txt.oninput = (e) => { jawabanUser[indeksSoal] = e.target.value; };
+        container.appendChild(txt);
+    }
+
+    document.getElementById('btn-prev').style.display = indeksSoal === 0 ? 'none' : 'block';
+    document.getElementById('btn-next').style.display = indeksSoal === soalAktif.length - 1 ? 'none' : 'block';
+}
+
+function nextQuestion() { if (indeksSoal < soalAktif.length - 1) { indeksSoal++; renderSoal(); } }
+function prevQuestion() { if (indeksSoal > 0) { indeksSoal--; renderSoal(); } }
+
+function showResults() {
+    const belum = jawabanUser.filter(j => j === "").length;
+    if (belum > 0) {
+        if (!confirm(`Masih ada ${belum} soal belum diisi. Tetap ingin mengakhiri dan lihat hasil?`)) return;
+    }
+
+    document.getElementById('quiz-screen').style.display = 'none';
+    document.getElementById('result-screen').style.display = 'block';
+    
+    let skor = 0;
+    let objektifTotal = 0;
+    const rev = document.getElementById('review-container'); rev.innerHTML = '';
+    
+    soalAktif.forEach((s, i) => {
+        const u = jawabanUser[i];
+        const card = document.createElement('div'); card.className = 'review-card';
+        
+        if(s.tipe === 'pg' || s.tipe === 'bs') {
+            objektifTotal++;
+            let isWrong = u !== s.kunci_jawaban;
+            if (isWrong) card.classList.add('wrong-pg');
+            if (!isWrong && u !== "") skor++;
+            
+            card.innerHTML = `
+                <div>
+                    <span class="review-badge">${s.tipe.toUpperCase()}</span>
+                    <span style="font-weight:bold">${i+1}. ${s.pertanyaan}</span>
+                </div>
+                <div class="ans-user">${u === "" ? "Tidak diisi" : u} ${u === "" ? "" : (isWrong ? '<span style="color:red; font-weight:bold"> (Salah)</span>' : '<span style="color:green; font-weight:bold"> (Benar)</span>')}</div>
+                <div style="font-size:12px; color:#666; margin-top:10px">Jawaban Kunci:</div>
+                <div class="ans-ref">${s.kunci_jawaban}</div>
+            `;
+        } else {
+            card.innerHTML = `
+                <div>
+                    <span class="review-badge">ESSAY</span>
+                    <span style="font-weight:bold">${i+1}. ${s.pertanyaan}</span>
+                </div>
+                <div style="font-size:12px; color:#666; margin-top:15px;">Jawaban Anda:</div>
+                <div class="ans-user" style="white-space: pre-wrap;">${u === "" ? "Tidak diisi" : u}</div>
+                <div style="font-size:12px; color:#666; margin-top:10px">Referensi Jawaban Kunci:</div>
+                <div class="ans-ref">${s.kunci_jawaban}</div>
+            `;
+        }
+        rev.appendChild(card);
+    });
+    
+    document.getElementById('score-category-name').innerText = document.getElementById('current-category-text').innerText;
+    document.getElementById('score-text-total').innerText = `${skor} / ${objektifTotal}`;
+    window.scrollTo(0,0);
+}
+
+initMenu();
+</script>
+</body>
+</html>
